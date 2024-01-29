@@ -1,9 +1,26 @@
 import streamlit as st
+import spacy
+import subprocess
+import sys
 from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import YouTube
 from textblob import TextBlob
-import spacy
-spacy.cli.download("en_core_web_sm")
+
+# Function to download spaCy English small model
+def download_spacy_model():
+    try:
+        subprocess.check_call([sys.executable, "-m", "spacy", "download", "en_core_web_sm"])
+    except subprocess.CalledProcessError as e:
+        st.error(f"Error downloading spaCy model: {e}")
+
+# Function to load spaCy model
+def load_spacy_model():
+    try:
+        nlp = spacy.load("en_core_web_sm")
+        return nlp
+    except OSError as e:
+        st.error(f"Error loading spaCy model: {e}")
+
 # Function to get the transcript from a YouTube video URL
 def get_transcript(youtube_url):
     try:
@@ -20,8 +37,7 @@ def analyze_sentiment(sentence):
     return blob.sentiment.polarity
 
 # Function for advanced NLP analysis
-def advanced_nlp_analysis(text):
-    nlp = spacy.load('en_core_web_sm')
+def advanced_nlp_analysis(text, nlp):
     doc = nlp(text)
     entities = list(set((ent.text, ent.label_) for ent in doc.ents if ent.label_ in ['PERSON', 'ORG', 'GPE', 'DATE']))
     key_phrases = [chunk.text for chunk in doc.noun_chunks]
@@ -47,7 +63,13 @@ def print_summary(title, values):
 
 def main():
     st.title("YouTube Video NLP Insights")
-    
+
+    # Download spaCy model if not already downloaded
+    download_spacy_model()
+
+    # Load spaCy model
+    nlp = load_spacy_model()
+
     # UI for input URL
     youtube_url = st.text_input("Enter YouTube Video URL")
     if st.button("Analyze"):
@@ -60,7 +82,7 @@ def main():
             st.error(video_text)
         else:
             # Perform advanced NLP analysis
-            top_entities, top_key_phrases, sentiment_score, top_negative_sentences, top_positive_sentences, summary_text = advanced_nlp_analysis(video_text)
+            top_entities, top_key_phrases, sentiment_score, top_negative_sentences, top_positive_sentences, summary_text = advanced_nlp_analysis(video_text, nlp)
 
             # Display analysis results
             st.subheader("Top 10 Named Entities")
