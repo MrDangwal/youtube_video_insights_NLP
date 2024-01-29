@@ -1,7 +1,3 @@
-import spacy
-from spacy.lang.en import English
-
-nlp = spacy.load('en_core_web_sm')
 import streamlit as st
 from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import YouTube
