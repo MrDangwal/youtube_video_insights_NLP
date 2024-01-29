@@ -1,13 +1,9 @@
 import streamlit as st
 import spacy
-import requests
-from io import BytesIO
-from zipfile import ZipFile
 from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import YouTube
 from textblob import TextBlob
 from pathlib import Path
-import os
 
 # Function to load spaCy model from a local directory
 def load_spacy_model(model_path):
@@ -17,23 +13,21 @@ def load_spacy_model(model_path):
     except OSError as e:
         st.error(f"Error loading spaCy model: {e}")
 
-# Function to download model from Google Drive using requests
-def download_model_from_drive():
-    # Define the Google Drive file ID of your model folder
-    file_id = '1tmscNlWPSD1j1Iediq44Rcig9keYHXmL'
+# Function to download spaCy English small model
+def download_spacy_model():
+    # Define the output path where the model folder will be saved
+    output_path = Path("path/to/save/model")
 
-    # Automatically assign a path for saving the model folder
-    output_path = Path("spaCy_model")
+    # Download spaCy English small model
+    spacy.cli.download("en_core_web_sm")
 
-    # Check if the model folder already exists, if not, download and extract it
-    if not os.path.exists(output_path):
-        url = f'https://drive.google.com/uc?id={file_id}'
-        response = requests.get(url)
-        
-        with ZipFile(BytesIO(response.content)) as zip_file:
-            zip_file.extractall(output_path)
+    # Move the downloaded model folder to the recommended location
+    model_source_path = Path("~/.spacy/en_core_web_sm-3.1.0")
+    model_destination_path = output_path / "en_core_web_sm-3.1.0"
+    model_destination_path.parent.mkdir(parents=True, exist_ok=True)
+    model_source_path.rename(model_destination_path)
 
-    return output_path
+    return model_destination_path
 
 # Function to get the transcript from a YouTube video URL
 def get_transcript(youtube_url):
@@ -79,7 +73,7 @@ def main():
     st.title("YouTube Video NLP Insights")
 
     # Load spaCy model
-    model_path = download_model_from_drive()
+    model_path = download_spacy_model()
     nlp = load_spacy_model(model_path)
 
     # UI for input URL
