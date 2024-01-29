@@ -32,26 +32,26 @@ def analyze_sentiment(sentence):
 def advanced_nlp_analysis(text):
     entities = []
     key_phrases = []
-    sentiment_score = TextBlob(text).sentiment.polarity
+
+    # Tokenize text into sentences using NLTK
+    sentences = sent_tokenize(text)
 
     # Named Entity Recognition using NLTK
-    words = word_tokenize(text)
-    tagged_words = pos_tag(words)
-    chunked_words = ne_chunk(tagged_words)
+    for sentence in sentences:
+        words = word_tokenize(sentence)
+        tagged_words = pos_tag(words)
+        chunked_words = ne_chunk(tagged_words)
 
-    for subtree in chunked_words:
-        if isinstance(subtree, Tree):
-            entity = " ".join([word for word, pos in subtree.leaves()])
-            entities.append((entity, subtree.label()))
-        else:
-            key_phrases.append(subtree[0])
+        for subtree in chunked_words:
+            if isinstance(subtree, Tree):
+                entity = " ".join([word for word, pos in subtree.leaves()])
+                entities.append((entity, subtree.label()))
+            else:
+                key_phrases.append(subtree[0])
 
     # Sort entities by length in descending order
     entities.sort(key=lambda x: len(x[0]), reverse=True)
     top_entities = entities[:10]
-
-    # Tokenize text into sentences
-    sentences = sent_tokenize(text)
 
     # Additional sentiment analysis using TextBlob
     sentences_with_sentiments = [(sentence, analyze_sentiment(sentence)) for sentence in sentences]
