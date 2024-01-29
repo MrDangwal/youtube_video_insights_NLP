@@ -2,6 +2,4 @@ streamlit
 youtube_transcript_api
 pytube
 textblob
-spacy
-requests
-en_core_web_sm==<3.7.1>
+nltk
