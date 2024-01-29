@@ -1,25 +1,31 @@
 import streamlit as st
 import spacy
-import subprocess
-import sys
+from google_drive_downloader import GoogleDriveDownloader as gdd
 from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import YouTube
 from textblob import TextBlob
+from pathlib import Path
 
-# Function to download spaCy English small model
-def download_spacy_model():
+# Function to load spaCy model from a local directory
+def load_spacy_model(model_path):
     try:
-        subprocess.check_call([sys.executable, "-m", "spacy", "download", "en_core_web_sm"])
-    except subprocess.CalledProcessError as e:
-        st.error(f"Error downloading spaCy model: {e}")
-
-# Function to load spaCy model
-def load_spacy_model():
-    try:
-        nlp = spacy.load("en_core_web_sm")
+        nlp = spacy.load(model_path)
         return nlp
     except OSError as e:
         st.error(f"Error loading spaCy model: {e}")
+
+# Function to download model from Google Drive
+def download_model_from_drive():
+    # Define the Google Drive file ID of your model folder
+    file_id = '1tmscNlWPSD1j1Iediq44Rcig9keYHXmL'
+
+    # Automatically assign a path for saving the model folder
+    output_path = Path("spaCy_model")
+    
+    # Download the model folder from Google Drive
+    gdd.download_file_from_google_drive(file_id=file_id, dest_path=output_path, unzip=True)
+
+    return output_path
 
 # Function to get the transcript from a YouTube video URL
 def get_transcript(youtube_url):
@@ -64,11 +70,9 @@ def print_summary(title, values):
 def main():
     st.title("YouTube Video NLP Insights")
 
-    # Download spaCy model if not already downloaded
-    download_spacy_model()
-
     # Load spaCy model
-    nlp = load_spacy_model()
+    model_path = download_model_from_drive()
+    nlp = load_spacy_model(model_path)
 
     # UI for input URL
     youtube_url = st.text_input("Enter YouTube Video URL")
