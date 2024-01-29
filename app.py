@@ -3,7 +3,6 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import YouTube
 from nltk import ne_chunk, pos_tag, word_tokenize
 from nltk.tree import Tree
-from nltk.tokenize import sent_tokenize
 from nltk.sentiment import SentimentIntensityAnalyzer
 import nltk
 import string
@@ -30,6 +29,23 @@ def clean_text(text):
     text = text.translate(str.maketrans("", "", string.punctuation))
     return text
 
+def split_text_into_sentences(text, max_words_per_sentence):
+    sentences = []
+    words = text.split()
+    current_sentence = []
+
+    for word in words:
+        if len(current_sentence) + len(word.split()) <= max_words_per_sentence:
+            current_sentence.extend(word.split())
+        else:
+            sentences.append(" ".join(current_sentence))
+            current_sentence = [word]
+
+    if current_sentence:
+        sentences.append(" ".join(current_sentence))
+
+    return sentences
+
 def advanced_nlp_analysis(text):
     entities = []
     positive_sentences = []
@@ -49,8 +65,9 @@ def advanced_nlp_analysis(text):
     entities.sort(key=lambda x: len(x[0]), reverse=True)
     top_entities = entities[:10]
 
-    # Tokenize text into sentences using NLTK
-    sentences = sent_tokenize(text)
+    # Split text into sentences with a maximum of 20 words per sentence
+    max_words_per_sentence = 20
+    sentences = split_text_into_sentences(text, max_words_per_sentence)
 
     # Sentiment analysis using NLTK Vader
     sid = SentimentIntensityAnalyzer()
