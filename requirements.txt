@@ -3,4 +3,4 @@ youtube_transcript_api
 pytube
 textblob
 spacy
-gdown
+requests
