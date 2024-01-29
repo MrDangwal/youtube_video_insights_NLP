@@ -3,4 +3,3 @@ youtube_transcript_api
 pytube
 textblob
 spacy
-google_drive_downloader
