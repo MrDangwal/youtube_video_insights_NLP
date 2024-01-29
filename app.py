@@ -11,6 +11,7 @@ nltk.download('maxent_ne_chunker')
 nltk.download('words')
 nltk.download('punkt')
 nltk.download('stopwords')
+nltk.download('averaged_perceptron_tagger')
 # Function to get the transcript from a YouTube video URL
 def get_transcript(youtube_url):
     try:
