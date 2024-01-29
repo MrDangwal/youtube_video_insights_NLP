@@ -1,10 +1,11 @@
 import streamlit as st
 import spacy
-from google_drive_downloader import GoogleDriveDownloader as gdd
+import gdown
 from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import YouTube
 from textblob import TextBlob
 from pathlib import Path
+import os
 
 # Function to load spaCy model from a local directory
 def load_spacy_model(model_path):
@@ -14,16 +15,22 @@ def load_spacy_model(model_path):
     except OSError as e:
         st.error(f"Error loading spaCy model: {e}")
 
-# Function to download model from Google Drive
+# Function to download model from Google Drive using gdown
 def download_model_from_drive():
     # Define the Google Drive file ID of your model folder
-    file_id = '1tmscNlWPSD1j1Iediq44Rcig9keYHXmL'
+    file_id = 'your_file_id_here'
 
     # Automatically assign a path for saving the model folder
     output_path = Path("spaCy_model")
-    
-    # Download the model folder from Google Drive
-    gdd.download_file_from_google_drive(file_id=file_id, dest_path=output_path, unzip=True)
+
+    # Check if the model folder already exists, if not, download it
+    if not os.path.exists(output_path):
+        url = f'https://drive.google.com/uc?id={file_id}'
+        output_file = f'{output_path}.zip'
+        gdown.download(url, output_file, quiet=False)
+        st.write("Extracting model folder...")
+        os.system(f"unzip -q {output_file} -d {output_path}")
+        os.remove(output_file)
 
     return output_path
 
