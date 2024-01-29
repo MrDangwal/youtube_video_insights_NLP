@@ -53,6 +53,10 @@ def main():
     if st.button("Analyze"):
         st.write("Analyzing...")
 
+        # Download and install spaCy model
+        import spacy.cli
+        spacy.cli.download("en_core_web_sm")
+
         # Get video text from URL
         video_text = get_transcript(youtube_url)
 
@@ -66,21 +70,6 @@ def main():
             st.subheader("Top 10 Named Entities")
             st.write(print_summary("Top 10 Named Entities", top_entities))
 
-            st.subheader("Top 10 Key Phrases")
-            st.write(print_summary("Top 10 Key Phrases", top_key_phrases))
-
-            # Provide a sentiment summary
-            sentiment_summary = "Positive" if sentiment_score > 0 else "Neutral" if sentiment_score == 0 else "Negative"
-            st.write(f"Sentiment Summary: {sentiment_summary} (Score: {sentiment_score:.2f})")
-
-            st.subheader("Top 5 Negative Sentences")
-            st.write(print_summary("Top 5 Negative Sentences", top_negative_sentences))
-
-            st.subheader("Top 5 Positive Sentences")
-            st.write(print_summary("Top 5 Positive Sentences", top_positive_sentences))
-
-            st.subheader("Summary of the Video Text (first 100 words)")
-            st.write(summary_text)
 
 if __name__ == "__main__":
     main()
