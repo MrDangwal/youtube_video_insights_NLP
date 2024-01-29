@@ -3,7 +3,7 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import YouTube
 from textblob import TextBlob
 import nltk
-from nltk import ne_chunk, pos_tag, word_tokenize
+from nltk import ne_chunk, pos_tag, word_tokenize, sent_tokenize
 from nltk.tree import Tree
 
 # Download NLTK resources
@@ -43,30 +43,23 @@ def advanced_nlp_analysis(text):
         if isinstance(subtree, Tree):
             entity = " ".join([word for word, pos in subtree.leaves()])
             entities.append((entity, subtree.label()))
+        else:
+            key_phrases.append(subtree[0])
+
+    # Sort entities by length in descending order
+    entities.sort(key=lambda x: len(x[0]), reverse=True)
+    top_entities = entities[:10]
+
+    # Tokenize text into sentences
+    sentences = sent_tokenize(text)
 
     # Additional sentiment analysis using TextBlob
-    sentences_with_sentiments = [(sentence, analyze_sentiment(sentence)) for sentence in nltk.sent_tokenize(text)]
-    top_emotional_sentences = sorted(sentences_with_sentiments, key=lambda x: abs(x[1]), reverse=True)[:10]
+    sentences_with_sentiments = [(sentence, analyze_sentiment(sentence)) for sentence in sentences]
+    top_emotional_sentences = sorted(sentences_with_sentiments, key=lambda x: abs(x[1]), reverse=True)
     top_negative_sentences = [sent for sent in top_emotional_sentences if sent[1] < 0][:5]
     top_positive_sentences = [sent for sent in top_emotional_sentences if sent[1] > 0][:5]
 
-    # Get the top 10 entities with the longest characters
-    top_entities_longest = sorted(entities, key=lambda x: len(x[0]), reverse=True)[:10]
-
-    # Download option for the text
-    st.download_button("Download Video Text", data=text, file_name="video_text.txt")
-
-    return top_entities_longest, top_negative_sentences, top_positive_sentences
-
-def print_summary(title, values):
-    summary = f"{title}:\n"
-    for idx, value in enumerate(values, start=1):
-        if isinstance(value, list):
-            for sub_idx, sub_value in enumerate(value, start=1):
-                summary += f"  {idx}.{sub_idx}. {sub_value[0]} (Sentiment: {sub_value[1]:.2f})\n"
-        else:
-            summary += f"  {idx}. {value[0]} (Type: {value[1]})\n"
-    return summary
+    return top_entities, top_positive_sentences, top_negative_sentences, text
 
 def main():
     st.title("YouTube Video NLP Insights")
@@ -83,17 +76,36 @@ def main():
             st.error(video_text)
         else:
             # Perform advanced NLP analysis using NLTK
-            top_entities_longest, top_negative_sentences, top_positive_sentences = advanced_nlp_analysis(video_text)
+            top_entities, top_positive_sentences, top_negative_sentences, text = advanced_nlp_analysis(video_text)
 
-            # Display analysis results
-            st.subheader("Top 10 Entities with Longest Characters")
-            st.write(print_summary("Top 10 Entities with Longest Characters", top_entities_longest))
+            # Display top entities
+            st.subheader("Top 10 Longest Character Entities")
+            for entity, label in top_entities:
+                st.write(f"{entity} (Type: {label})")
 
-            st.subheader("Top 5 Negative Sentences")
-            st.write(print_summary("Top 5 Negative Sentences", top_negative_sentences))
+            # Provide a sentiment summary
+            sentiment_summary = "Positive" if TextBlob(text).sentiment.polarity > 0 else "Neutral" if TextBlob(text).sentiment.polarity == 0 else "Negative"
+            st.write(f"Sentiment Summary: {sentiment_summary}")
 
+            # Display top 5 positive sentences
             st.subheader("Top 5 Positive Sentences")
-            st.write(print_summary("Top 5 Positive Sentences", top_positive_sentences))
+            for sentence, _ in top_positive_sentences:
+                st.write(sentence)
+
+            # Display top 5 negative sentences
+            st.subheader("Top 5 Negative Sentences")
+            for sentence, _ in top_negative_sentences:
+                st.write(sentence)
+
+            # Download option for the text
+            st.subheader("Download Video Text")
+            st.write("Click below to download the video text as a text file.")
+            st.download_button(
+                label="Download Text",
+                data=text,
+                file_name="video_text.txt",
+                mime="text/plain"
+            )
 
 if __name__ == "__main__":
     main()
