@@ -1,33 +1,12 @@
-import streamlit as st
 import spacy
+from spacy.lang.en import English
+
+nlp = spacy.load('en_core_web_sm')
+import streamlit as st
 from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import YouTube
 from textblob import TextBlob
-from pathlib import Path
-
-# Function to load spaCy model from a local directory
-def load_spacy_model(model_path):
-    try:
-        nlp = spacy.load(model_path)
-        return nlp
-    except OSError as e:
-        st.error(f"Error loading spaCy model: {e}")
-
-# Function to download spaCy English small model
-def download_spacy_model():
-    # Define the output path where the model folder will be saved
-    output_path = Path("path/to/save/model")
-
-    # Download spaCy English small model
-    spacy.cli.download("en_core_web_sm")
-
-    # Move the downloaded model folder to the recommended location
-    model_source_path = Path("~/.spacy/en_core_web_sm-3.1.0")
-    model_destination_path = output_path / "en_core_web_sm-3.1.0"
-    model_destination_path.parent.mkdir(parents=True, exist_ok=True)
-    model_source_path.rename(model_destination_path)
-
-    return model_destination_path
+import spacy
 
 # Function to get the transcript from a YouTube video URL
 def get_transcript(youtube_url):
@@ -45,7 +24,8 @@ def analyze_sentiment(sentence):
     return blob.sentiment.polarity
 
 # Function for advanced NLP analysis
-def advanced_nlp_analysis(text, nlp):
+def advanced_nlp_analysis(text):
+    nlp = spacy.load('en_core_web_sm')
     doc = nlp(text)
     entities = list(set((ent.text, ent.label_) for ent in doc.ents if ent.label_ in ['PERSON', 'ORG', 'GPE', 'DATE']))
     key_phrases = [chunk.text for chunk in doc.noun_chunks]
@@ -71,11 +51,7 @@ def print_summary(title, values):
 
 def main():
     st.title("YouTube Video NLP Insights")
-
-    # Load spaCy model
-    model_path = download_spacy_model()
-    nlp = load_spacy_model(model_path)
-
+    
     # UI for input URL
     youtube_url = st.text_input("Enter YouTube Video URL")
     if st.button("Analyze"):
@@ -88,7 +64,7 @@ def main():
             st.error(video_text)
         else:
             # Perform advanced NLP analysis
-            top_entities, top_key_phrases, sentiment_score, top_negative_sentences, top_positive_sentences, summary_text = advanced_nlp_analysis(video_text, nlp)
+            top_entities, top_key_phrases, sentiment_score, top_negative_sentences, top_positive_sentences, summary_text = advanced_nlp_analysis(video_text)
 
             # Display analysis results
             st.subheader("Top 10 Named Entities")
