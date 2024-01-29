@@ -4,7 +4,7 @@ from pytube import YouTube
 from nltk import ne_chunk, pos_tag, word_tokenize
 from nltk.tree import Tree
 from nltk.tokenize import sent_tokenize
-from textblob import TextBlob
+from nltk.sentiment import SentimentIntensityAnalyzer
 import nltk
 import string
 
@@ -14,6 +14,7 @@ nltk.download('words')
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('averaged_perceptron_tagger')
+nltk.download('vader_lexicon')
 
 def get_transcript(youtube_url):
     try:
@@ -51,14 +52,15 @@ def advanced_nlp_analysis(text):
     # Tokenize text into sentences using NLTK
     sentences = sent_tokenize(text)
 
-    # Additional sentiment analysis using TextBlob
+    # Sentiment analysis using NLTK Vader
+    sid = SentimentIntensityAnalyzer()
     for sentence in sentences:
         cleaned_sentence = clean_text(sentence)
-        sentiment_score = TextBlob(cleaned_sentence).sentiment.polarity
+        sentiment_score = sid.polarity_scores(cleaned_sentence)['compound']
 
-        if sentiment_score > 0:
+        if sentiment_score > 0.05:
             positive_sentences.append((sentence, sentiment_score))
-        elif sentiment_score < 0:
+        elif sentiment_score < -0.05:
             negative_sentences.append((sentence, sentiment_score))
 
     # Sort sentences by sentiment score
