@@ -1,11 +1,12 @@
 import streamlit as st
 from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import YouTube
+from nltk import ne_chunk, pos_tag, word_tokenize
+from nltk.tree import Tree
+from nltk.tokenize import sent_tokenize
 from textblob import TextBlob
 import nltk
-from nltk import ne_chunk, pos_tag, word_tokenize, sent_tokenize
-from nltk.tree import Tree
-from nltk.tokenize.punkt import PunktSentenceTokenizer
+import string
 
 # Download NLTK resources
 nltk.download('maxent_ne_chunker')
@@ -14,7 +15,6 @@ nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('averaged_perceptron_tagger')
 
-# Function to get the transcript from a YouTube video URL
 def get_transcript(youtube_url):
     try:
         video_id = YouTube(youtube_url).video_id
@@ -24,44 +24,62 @@ def get_transcript(youtube_url):
     except Exception as e:
         return f"Error: {e}"
 
-# Function for advanced NLP analysis using NLTK
+def clean_text(text):
+    # Remove punctuation
+    text = text.translate(str.maketrans("", "", string.punctuation))
+    return text
+
 def advanced_nlp_analysis(text):
     entities = []
-    key_phrases = []
-
-    # Use PunktSentenceTokenizer for more fine-grained sentence tokenization
-    sentence_tokenizer = PunktSentenceTokenizer()
-    sentences = sentence_tokenizer.tokenize(text)
+    positive_sentences = []
+    negative_sentences = []
 
     # Named Entity Recognition using NLTK
-    for sentence in sentences:
-        words = word_tokenize(sentence)
-        tagged_words = pos_tag(words)
-        chunked_words = ne_chunk(tagged_words)
+    words = word_tokenize(text)
+    tagged_words = pos_tag(words)
+    chunked_words = ne_chunk(tagged_words)
 
-        for subtree in chunked_words:
-            if isinstance(subtree, Tree):
-                entity = " ".join([word for word, pos in subtree.leaves()])
-                entities.append((entity, subtree.label()))
-            else:
-                key_phrases.append(subtree[0])
+    for subtree in chunked_words:
+        if isinstance(subtree, Tree):
+            entity = " ".join([word for word, pos in subtree.leaves()])
+            entities.append((entity, subtree.label()))
 
     # Sort entities by length in descending order
     entities.sort(key=lambda x: len(x[0]), reverse=True)
     top_entities = entities[:10]
 
-    # Additional sentiment analysis using TextBlob
-    sentences_with_sentiments = [(sentence, TextBlob(sentence).sentiment.polarity) for sentence in sentences]
-    
-    # Separate positive and negative sentences
-    positive_sentences = [sent for sent, score in sentences_with_sentiments if score > 0][:5]
-    negative_sentences = [sent for sent, score in sentences_with_sentiments if score < 0][:5]
+    # Tokenize text into sentences using NLTK
+    sentences = sent_tokenize(text)
 
-    return top_entities, positive_sentences, negative_sentences, text
+    # Additional sentiment analysis using TextBlob
+    for sentence in sentences:
+        cleaned_sentence = clean_text(sentence)
+        sentiment_score = TextBlob(cleaned_sentence).sentiment.polarity
+
+        if sentiment_score > 0:
+            positive_sentences.append((sentence, sentiment_score))
+        elif sentiment_score < 0:
+            negative_sentences.append((sentence, sentiment_score))
+
+    # Sort sentences by sentiment score
+    positive_sentences.sort(key=lambda x: x[1], reverse=True)
+    negative_sentences.sort(key=lambda x: x[1])
+
+    return top_entities, positive_sentences[:5], negative_sentences[:5], text
+
+def print_summary(title, values):
+    summary = f"{title}:\n"
+    for idx, value in enumerate(values, start=1):
+        if isinstance(value, list):
+            for sub_idx, sub_value in enumerate(value, start=1):
+                summary += f"  {idx}.{sub_idx}. {sub_value[0]} (Sentiment: {sub_value[1]:.2f})\n"
+        else:
+            summary += f"  {idx}. {value}\n"
+    return summary
 
 def main():
     st.title("YouTube Video NLP Insights")
-    
+
     # UI for input URL
     youtube_url = st.text_input("Enter YouTube Video URL")
     if st.button("Analyze"):
@@ -83,13 +101,13 @@ def main():
 
             # Display top positive sentences
             st.subheader("Top 5 Positive Sentences")
-            for sentence in positive_sentences:
-                st.write(sentence)
+            for sentence, score in positive_sentences:
+                st.write(f"{sentence} (Sentiment: {score:.2f})")
 
             # Display top negative sentences
             st.subheader("Top 5 Negative Sentences")
-            for sentence in negative_sentences:
-                st.write(sentence)
+            for sentence, score in negative_sentences:
+                st.write(f"{sentence} (Sentiment: {score:.2f})")
 
             # Download option for the text
             st.subheader("Download Video Text")
