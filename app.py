@@ -5,6 +5,7 @@ from textblob import TextBlob
 import nltk
 from nltk import ne_chunk, pos_tag, word_tokenize, sent_tokenize
 from nltk.tree import Tree
+from nltk.tokenize.punkt import PunktSentenceTokenizer
 
 # Download NLTK resources
 nltk.download('maxent_ne_chunker')
@@ -23,18 +24,14 @@ def get_transcript(youtube_url):
     except Exception as e:
         return f"Error: {e}"
 
-# Function to analyze sentiment of a sentence
-def analyze_sentiment(sentence):
-    blob = TextBlob(sentence)
-    return blob.sentiment.polarity
-
 # Function for advanced NLP analysis using NLTK
 def advanced_nlp_analysis(text):
     entities = []
     key_phrases = []
 
-    # Tokenize text into sentences using NLTK
-    sentences = sent_tokenize(text)
+    # Use PunktSentenceTokenizer for more fine-grained sentence tokenization
+    sentence_tokenizer = PunktSentenceTokenizer()
+    sentences = sentence_tokenizer.tokenize(text)
 
     # Named Entity Recognition using NLTK
     for sentence in sentences:
@@ -54,12 +51,13 @@ def advanced_nlp_analysis(text):
     top_entities = entities[:10]
 
     # Additional sentiment analysis using TextBlob
-    sentences_with_sentiments = [(sentence, analyze_sentiment(sentence)) for sentence in sentences]
-    top_emotional_sentences = sorted(sentences_with_sentiments, key=lambda x: abs(x[1]), reverse=True)
-    top_negative_sentences = [sent for sent in top_emotional_sentences if sent[1] < 0][:5]
-    top_positive_sentences = [sent for sent in top_emotional_sentences if sent[1] > 0][:5]
+    sentences_with_sentiments = [(sentence, TextBlob(sentence).sentiment.polarity) for sentence in sentences]
+    
+    # Separate positive and negative sentences
+    positive_sentences = [sent for sent, score in sentences_with_sentiments if score > 0][:5]
+    negative_sentences = [sent for sent, score in sentences_with_sentiments if score < 0][:5]
 
-    return top_entities, top_positive_sentences, top_negative_sentences, text
+    return top_entities, positive_sentences, negative_sentences, text
 
 def main():
     st.title("YouTube Video NLP Insights")
@@ -76,25 +74,21 @@ def main():
             st.error(video_text)
         else:
             # Perform advanced NLP analysis using NLTK
-            top_entities, top_positive_sentences, top_negative_sentences, text = advanced_nlp_analysis(video_text)
+            top_entities, positive_sentences, negative_sentences, text = advanced_nlp_analysis(video_text)
 
             # Display top entities
             st.subheader("Top 10 Longest Character Entities")
             for entity, label in top_entities:
                 st.write(f"{entity} (Type: {label})")
 
-            # Provide a sentiment summary
-            sentiment_summary = "Positive" if TextBlob(text).sentiment.polarity > 0 else "Neutral" if TextBlob(text).sentiment.polarity == 0 else "Negative"
-            st.write(f"Sentiment Summary: {sentiment_summary}")
-
-            # Display top 5 positive sentences
+            # Display top positive sentences
             st.subheader("Top 5 Positive Sentences")
-            for sentence, _ in top_positive_sentences:
+            for sentence in positive_sentences:
                 st.write(sentence)
 
-            # Display top 5 negative sentences
+            # Display top negative sentences
             st.subheader("Top 5 Negative Sentences")
-            for sentence, _ in top_negative_sentences:
+            for sentence in negative_sentences:
                 st.write(sentence)
 
             # Download option for the text
