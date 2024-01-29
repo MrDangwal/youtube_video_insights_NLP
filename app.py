@@ -1,6 +1,8 @@
 import streamlit as st
 import spacy
-import gdown
+import requests
+from io import BytesIO
+from zipfile import ZipFile
 from youtube_transcript_api import YouTubeTranscriptApi
 from pytube import YouTube
 from textblob import TextBlob
@@ -15,7 +17,7 @@ def load_spacy_model(model_path):
     except OSError as e:
         st.error(f"Error loading spaCy model: {e}")
 
-# Function to download model from Google Drive using gdown
+# Function to download model from Google Drive using requests
 def download_model_from_drive():
     # Define the Google Drive file ID of your model folder
     file_id = 'your_file_id_here'
@@ -23,14 +25,13 @@ def download_model_from_drive():
     # Automatically assign a path for saving the model folder
     output_path = Path("spaCy_model")
 
-    # Check if the model folder already exists, if not, download it
+    # Check if the model folder already exists, if not, download and extract it
     if not os.path.exists(output_path):
         url = f'https://drive.google.com/uc?id={file_id}'
-        output_file = f'{output_path}.zip'
-        gdown.download(url, output_file, quiet=False)
-        st.write("Extracting model folder...")
-        os.system(f"unzip -q {output_file} -d {output_path}")
-        os.remove(output_file)
+        response = requests.get(url)
+        
+        with ZipFile(BytesIO(response.content)) as zip_file:
+            zip_file.extractall(output_path)
 
     return output_path
 
