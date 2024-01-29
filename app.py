@@ -12,6 +12,7 @@ nltk.download('words')
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('averaged_perceptron_tagger')
+
 # Function to get the transcript from a YouTube video URL
 def get_transcript(youtube_url):
     try:
@@ -50,7 +51,7 @@ def advanced_nlp_analysis(text):
     top_emotional_sentences = sorted(sentences_with_sentiments, key=lambda x: abs(x[1]), reverse=True)[:10]
     top_negative_sentences = [sent for sent in top_emotional_sentences if sent[1] < 0][:5]
     top_positive_sentences = [sent for sent in top_emotional_sentences if sent[1] > 0][:5]
-    summary_text = ' '.join(nltk.sent_tokenize(text)[:5])
+    summary_text = ' '.join(nltk.sent_tokenize(text)[:10])
 
     return entities, key_phrases, sentiment_score, top_negative_sentences, top_positive_sentences, summary_text
 
@@ -98,7 +99,7 @@ def main():
             st.subheader("Top 5 Positive Sentences")
             st.write(print_summary("Top 5 Positive Sentences", top_positive_sentences))
 
-            st.subheader("Summary of the Video Text (first 100 words)")
+            st.subheader("Summary of the Video Text (first 10 sentences)")
             st.write(summary_text)
 
 if __name__ == "__main__":
