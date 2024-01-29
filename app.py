@@ -9,7 +9,8 @@ from nltk.tree import Tree
 # Download NLTK resources
 nltk.download('maxent_ne_chunker')
 nltk.download('words')
-
+nltk.download('punkt')
+nltk.download('stopwords')
 # Function to get the transcript from a YouTube video URL
 def get_transcript(youtube_url):
     try:
