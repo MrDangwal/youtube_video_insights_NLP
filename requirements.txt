@@ -4,3 +4,4 @@ pytube
 textblob
 spacy
 requests
+python -m spacy download en_core_web_sm
