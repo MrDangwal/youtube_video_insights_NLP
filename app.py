@@ -20,7 +20,7 @@ def load_spacy_model(model_path):
 # Function to download model from Google Drive using requests
 def download_model_from_drive():
     # Define the Google Drive file ID of your model folder
-    file_id = 'your_file_id_here'
+    file_id = '1tmscNlWPSD1j1Iediq44Rcig9keYHXmL'
 
     # Automatically assign a path for saving the model folder
     output_path = Path("spaCy_model")
