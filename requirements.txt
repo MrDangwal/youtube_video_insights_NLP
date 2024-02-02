@@ -3,3 +3,5 @@ youtube_transcript_api
 pytube
 textblob
 nltk
+wordcloud
+matplotlib
