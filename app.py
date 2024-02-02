@@ -54,10 +54,11 @@ def generate_wordcloud(transcript):
                           colormap='viridis', contour_color='steelblue', contour_width=2,
                           max_font_size=80).generate(entities_text)
 
-    plt.figure(figsize=(12, 6))
-    plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis('off')
-    st.pyplot()
+    # Save the word cloud to a BytesIO object
+    img_bytes = wordcloud.to_image().tobytes()
+
+    # Display the word cloud using st.image
+    st.image(img_bytes, use_column_width=True)
 
 def extract_entities(text):
     words = word_tokenize(text)
