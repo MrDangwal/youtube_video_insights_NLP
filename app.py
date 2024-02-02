@@ -124,7 +124,7 @@ def advanced_nlp_analysis(text):
 def main():
     st.title("YouTube Video NLP Insights")
 
-    youtube_url = st.text_input("Enter YouTube Video URL")
+    youtube_url = st.text_input("""Enter YouTube Video URL (only works on videos that have captions)""")
     if st.button("Analyze"):
         st.write("Analyzing...")
 
@@ -133,11 +133,11 @@ def main():
         if video_text.startswith("Error"):
             st.error(video_text)
         else:
-            # Display the word cloud at the top
+            
             st.subheader("Word Cloud of Entities Mentioned In The Video")
             generate_wordcloud(video_text)
 
-            # Rest of the analysis
+            
             top_entities, positive_sentences, negative_sentences, text = advanced_nlp_analysis(video_text)
 
             st.subheader("Top 10 entities mentioned in the Video")
