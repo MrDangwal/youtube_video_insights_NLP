@@ -133,6 +133,11 @@ def main():
         if video_text.startswith("Error"):
             st.error(video_text)
         else:
+            # Display the word cloud at the top
+            st.subheader("Word Cloud of Entities")
+            generate_wordcloud(video_text)
+
+            # Rest of the analysis
             top_entities, positive_sentences, negative_sentences, text = advanced_nlp_analysis(video_text)
 
             st.subheader("Top 10 entities mentioned in the Video")
@@ -155,9 +160,6 @@ def main():
                 file_name="video_text.txt",
                 mime="text/plain"
             )
-
-            st.subheader("Word Cloud of Entities")
-            generate_wordcloud(video_text)
 
 if __name__ == "__main__":
     main()
