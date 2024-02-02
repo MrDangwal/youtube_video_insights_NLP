@@ -134,7 +134,7 @@ def main():
             st.error(video_text)
         else:
             # Display the word cloud at the top
-            st.subheader("Word Cloud of Entities")
+            st.subheader("Word Cloud of Entities Mentioned In The Video")
             generate_wordcloud(video_text)
 
             # Rest of the analysis
