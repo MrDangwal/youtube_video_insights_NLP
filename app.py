@@ -4,9 +4,10 @@ from pytube import YouTube
 from nltk import ne_chunk, pos_tag, word_tokenize
 from nltk.tree import Tree
 from nltk.sentiment import SentimentIntensityAnalyzer
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
 import nltk
 import string
-
 
 nltk.download('maxent_ne_chunker')
 nltk.download('words')
@@ -25,7 +26,6 @@ def get_transcript(youtube_url):
         return f"Error: {e}"
 
 def clean_text(text):
-    
     text = text.translate(str.maketrans("", "", string.punctuation))
     return text
 
@@ -45,6 +45,31 @@ def split_text_into_sentences(text, max_words_per_sentence):
         sentences.append(" ".join(current_sentence))
 
     return sentences
+
+def generate_wordcloud(transcript):
+    entities = extract_entities(transcript)
+    entities_text = " ".join(entities)
+
+    wordcloud = WordCloud(width=1600, height=800, max_words=100, background_color='black',
+                          colormap='viridis', contour_color='steelblue', contour_width=2,
+                          max_font_size=80).generate(entities_text)
+
+    plt.figure(figsize=(12, 6))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    st.pyplot()
+
+def extract_entities(text):
+    words = word_tokenize(text)
+    tagged_words = pos_tag(words)
+    named_entities = ne_chunk(tagged_words)
+
+    entities = []
+    for entity in named_entities:
+        if isinstance(entity, Tree):
+            entities.append(" ".join([word for word, tag in entity.leaves()]))
+
+    return entities
 
 def advanced_nlp_analysis(text):
     entities = []
@@ -86,49 +111,32 @@ def advanced_nlp_analysis(text):
 
     return top_entities, positive_sentences[:5], negative_sentences[:5], text
 
-def print_summary(title, values):
-    summary = f"{title}:\n"
-    for idx, value in enumerate(values, start=1):
-        if isinstance(value, list):
-            for sub_idx, sub_value in enumerate(value, start=1):
-                summary += f"  {idx}.{sub_idx}. {sub_value[0]} (Sentiment: {sub_value[1]:.2f})\n"
-        else:
-            summary += f"  {idx}. {value}\n"
-    return summary
-
 def main():
     st.title("YouTube Video NLP Insights")
 
-    
     youtube_url = st.text_input("Enter YouTube Video URL")
     if st.button("Analyze"):
         st.write("Analyzing...")
 
-        
         video_text = get_transcript(youtube_url)
 
         if video_text.startswith("Error"):
             st.error(video_text)
         else:
-            
             top_entities, positive_sentences, negative_sentences, text = advanced_nlp_analysis(video_text)
 
-            
             st.subheader("Top 10 entities mentioned in the Video")
             for entity, label in top_entities:
                 st.write(f"{entity} (Type: {label})")
 
-            
             st.subheader("Top 5 Positive Sentences")
             for sentence, score in positive_sentences:
                 st.write(f"{sentence} (Sentiment: {score:.2f})")
 
-            
             st.subheader("Top 5 Negative Sentences")
             for sentence, score in negative_sentences:
                 st.write(f"{sentence} (Sentiment: {score:.2f})")
 
-            
             st.subheader("Download Video Text")
             st.write("Click below to download the video text as a text file.")
             st.download_button(
@@ -137,6 +145,9 @@ def main():
                 file_name="video_text.txt",
                 mime="text/plain"
             )
+
+            st.subheader("Word Cloud of Entities")
+            generate_wordcloud(video_text)
 
 if __name__ == "__main__":
     main()
