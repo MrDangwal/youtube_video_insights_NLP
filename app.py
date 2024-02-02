@@ -8,6 +8,9 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import nltk
 import string
+from PIL import Image
+import io
+
 
 nltk.download('maxent_ne_chunker')
 nltk.download('words')
@@ -46,6 +49,8 @@ def split_text_into_sentences(text, max_words_per_sentence):
 
     return sentences
 
+
+
 def generate_wordcloud(transcript):
     entities = extract_entities(transcript)
     entities_text = " ".join(entities)
@@ -54,11 +59,15 @@ def generate_wordcloud(transcript):
                           colormap='viridis', contour_color='steelblue', contour_width=2,
                           max_font_size=80).generate(entities_text)
 
-    # Save the word cloud to a BytesIO object
-    img_bytes = wordcloud.to_image().tobytes()
+    
+    img = wordcloud.to_image()
 
-    # Display the word cloud using st.image
-    st.image(img_bytes, use_column_width=True)
+    
+    img_bytes = io.BytesIO()
+    img.save(img_bytes, format='PNG')
+
+    
+    st.image(img_bytes, use_column_width=True, caption="Word Cloud of Entities")
 
 def extract_entities(text):
     words = word_tokenize(text)
